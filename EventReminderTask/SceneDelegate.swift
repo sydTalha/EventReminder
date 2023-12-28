@@ -6,8 +6,9 @@
 //
 
 import UIKit
+import UserNotifications
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
 
     var window: UIWindow?
 
@@ -16,9 +17,34 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
+        UNUserNotificationCenter.current().delegate = self
+        //request permission for user notification
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { [self] granted, error in
+            if granted{
+                print("notification permission granted")
+            }
+            else{
+                checkNotificationAuthorizationStatus()
+                
+            }
+        }
+        
         guard let _ = (scene as? UIWindowScene) else { return }
     }
 
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                let sceneDelegate = windowScene.delegate as? SceneDelegate,
+                let rootViewController = sceneDelegate.window?.rootViewController {
+                rootViewController.showAlert(title: "Event Arrived", msg: "Your schedule event has arrived")
+            }
+        }
+        
+        
+        completionHandler()
+    }
+    
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
@@ -47,6 +73,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to restore the scene back to its current state.
     }
 
+    
+    func checkNotificationAuthorizationStatus() {
+        let currentNotificationCenter = UNUserNotificationCenter.current()
+        currentNotificationCenter.getNotificationSettings { (settings) in
+            if settings.authorizationStatus == .denied {
+                // Handle denial of authorization or error here
+                DispatchQueue.main.async {
+                    if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                        if let viewController = scene.windows.first?.rootViewController {
+                            viewController.present(Helpers.getNotificationAuthorizationAlert(), animated: true, completion: nil)
+                        }
+                    }
+                }
+                
+                
+            }
+        }
+    }
 
 }
 

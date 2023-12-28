@@ -17,6 +17,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        
+        NotificationCenter.default.post(name: Notification.Name("didEnterBackground"), object: nil)
+
+    }
+    
+    func applicationWillTerminate(_ application: UIApplication) {
+        
+        NotificationCenter.default.post(name: Notification.Name("willTerminate"), object: nil)
+
+    }
+    
     // MARK: UISceneSession Lifecycle
 
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
